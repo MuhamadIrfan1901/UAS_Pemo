@@ -1,94 +1,129 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'dashboard.dart';
+import 'setting.dart';
+import 'users.dart';
 
-void main() => runApp(MyApp());
+void main() {
+  runApp(MyApp());
+}
 
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Navigation App',
+      title: 'Flutter',
       theme: ThemeData(
-        primarySwatch: Colors.blue,
+        primarySwatch: Colors.blueGrey,
       ),
-      home: NavigationApp(),
+      home: MultiProvider(
+        providers: [
+          ChangeNotifierProvider(create: (context) => BottomNavigationBarProvider()),
+        ],
+        child: MyHomePage(),
+      ),
     );
   }
 }
 
-class NavigationApp extends StatefulWidget {
-  @override
-  _NavigationAppState createState() => _NavigationAppState();
-}
-
-class _NavigationAppState extends State<NavigationApp> {
-  int _currentIndex = 0;
-  final List<Widget> _pages = [
-    HomeScreen(),
-    SearchScreen(),
-    ProfileScreen(),
-  ];
-
-  void _onTabTapped(int index) {
-    setState(() {
-      _currentIndex = index;
-    });
-  }
-
+class MyHomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.pinkAccent,
         centerTitle: true,
-        title: Text('Pertemuan 2'),
+        title: Text('Flutter'),
       ),
-      body: _pages[_currentIndex],
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: _onTabTapped,
-        items: [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_pin_sharp),
-            label: 'Data Diri',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.work_history_sharp),
-            label: 'Riwayat Pekerjaan',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.assured_workload),
-            label: 'Data Pendidikan',
-          ),
-        ],
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: <Widget>[
+            DrawerHeader(
+              decoration: BoxDecoration(
+                color: Colors.blueGrey,
+              ),
+              child: Text(
+                'User',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                ),
+              ),
+            ),
+            ListTile(
+              title: Text('Product'),
+              onTap: () {
+                Provider.of<BottomNavigationBarProvider>(context, listen: false).currentIndex = 0;
+                Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              title: Text('Category'),
+              onTap: () {
+                Provider.of<BottomNavigationBarProvider>(context, listen: false).currentIndex = 1;
+                Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              title: Text('Tag'),
+              onTap: () {
+                Provider.of<BottomNavigationBarProvider>(context, listen: false).currentIndex = 2;
+                Navigator.pop(context);
+              },
+            ),
+          ],
+        ),
       ),
+      body: _getPage(context),
+      bottomNavigationBar: _buildBottomNavigationBar(context),
+    );
+  }
+
+  Widget _getPage(BuildContext context) {
+    final provider = Provider.of<BottomNavigationBarProvider>(context);
+    switch (provider.currentIndex) {
+      case 0:
+        return ProfileScreen();
+      case 1:
+        return HomeScreen();
+      case 2:
+        return SettingsScreen();
+      default:
+        return HomeScreen();
+    }
+  }
+
+  Widget _buildBottomNavigationBar(BuildContext context) {
+    final provider = Provider.of<BottomNavigationBarProvider>(context);
+    return BottomNavigationBar(
+      currentIndex: provider.currentIndex,
+      onTap: (index) => provider.currentIndex = index,
+      items: [
+        BottomNavigationBarItem(
+          icon: Icon(Icons.person),
+          label: 'User',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.home_filled),
+          label: 'Dashboard',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.settings),
+          label: 'Setting',
+        ),
+      ],
     );
   }
 }
 
-class HomeScreen extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Text('Page Data Diri'),
-    );
-  }
-}
+class BottomNavigationBarProvider with ChangeNotifier {
+  int _currentIndex = 0;
 
-class SearchScreen extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Text('Page Riwayat Pekerjaan'),
-    );
-  }
-}
+  int get currentIndex => _currentIndex;
 
-class ProfileScreen extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Text('Page Data Pendidikan'),
-    );
+  set currentIndex(int index) {
+    _currentIndex = index;
+    notifyListeners();
   }
 }
